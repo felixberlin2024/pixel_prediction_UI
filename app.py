@@ -1,77 +1,72 @@
-# app.py
 import streamlit as st
-import io
-from PIL import Image
-import plotly.express as px
 import folium
-from streamlit_folium import folium_static
+from streamlit_folium import st_folium
+import requests
 
 # Set page configuration
-st.set_page_config(layout="wide", page_title="Pixel Prediction")
+st.set_page_config(layout="wide", page_title="Deforestation Analysis")
 
 # Header
-st.title("Pixel Prediction Tool: Deforestation Monitoring")
+st.title("Deforestation Analysis Tool")
 
-# Sidebar for additional settings and coordinates input
-st.sidebar.title("Settings & Upload")
-st.sidebar.info("Upload an image and enter location coordinates to monitor deforestation.")
+# Sidebar for displaying clicked coordinates
+st.sidebar.title("Selected Coordinates")
+st.sidebar.info("Click on the map to select a location. The coordinates will be used to analyze deforestation trends.")
 
-# Image upload and coordinates input
-uploaded_file = st.sidebar.file_uploader("Upload an image (JPG, JPEG, PNG)", type=["jpg", "jpeg", "png"])
-
-# Set default coordinates for the Amazon area
-latitude = st.sidebar.number_input("Enter Latitude:", min_value=-90.0, max_value=90.0, value=-3.4653)
-longitude = st.sidebar.number_input("Enter Longitude:", min_value=-180.0, max_value=180.0, value=-62.2159)
-
-# Display message if no file is uploaded
-if uploaded_file is None:
-    st.sidebar.warning("Please upload an image to proceed.")
+# Initialize state for clicked coordinates
+if "clicked_coords" not in st.session_state:
+    st.session_state["clicked_coords"] = {"latitude": None, "longitude": None}
 
 # Main content area
-col1, col2 = st.columns([3, 1])
+st.subheader("Select a Location on the Map")
 
-# Main content area (left column)
-with col1:
-    # Create a placeholder for the image display
-    image_placeholder = st.empty()
+# Create a Folium map centered at a default location
+default_center = [-3.4653, -62.2159]  # Default coordinates
+m = folium.Map(location=default_center, zoom_start=4)
 
-    if uploaded_file is not None:
-        # Read the file and display the image
-        image = Image.open(uploaded_file)
-        image_placeholder.image(image, caption="Uploaded Image", use_column_width=True)
+# Add an event listener for clicks
+map_data = st_folium(m, height=500, returned_objects=["last_clicked"])
 
-        # Placeholder for deforestation count (this would be calculated by your ML model)
-        deforested_trees = 100  # Placeholder value
-        st.write(f"### Estimated Number of Deforested Trees: {deforested_trees}")
+# Update session state with the clicked coordinates
+if map_data and map_data.get("last_clicked"):
+    st.session_state["clicked_coords"] = {
+        "latitude": map_data["last_clicked"]["lat"],
+        "longitude": map_data["last_clicked"]["lng"]
+    }
 
-        # Example of a bar chart (simulating results)
-        fig = px.bar(x=["Forest", "Deforested"], y=[80, 20], labels={'x': 'Land Type', 'y': 'Percentage'})
-        st.plotly_chart(fig)
+# Display the selected coordinates and fetch deforestation data
+latitude = st.session_state["clicked_coords"]["latitude"]
+longitude = st.session_state["clicked_coords"]["longitude"]
 
-# Measurement tool (right column)
-with col2:
-    st.subheader("Deforestation in Percentage")
+if latitude is not None and longitude is not None:
+    # Display rounded coordinates
+    st.write(f"**Latitude:** {round(latitude, 2)}")
+    st.write(f"**Longitude:** {round(longitude, 2)}")
 
-    # Placeholder for deforestation percentage (this would be calculated by your ML model)
-    deforestation_percentage = 25  # Placeholder value
+    # Call the FastAPI service with the full-precision coordinates
+    st.write("Analyzing deforestation trends in this area...")
+    try:
+        # Define the API endpoint
+        api_url = "http://127.0.0.1:8000/deforestation/" #http://host.docker.internal:8000/predict"
 
-    # Create a progress bar to represent the deforestation percentage
-    st.progress(deforestation_percentage)
-    st.write(f"Deforestation: {deforestation_percentage}%")
 
-# Interactive Map for showing the location of the image
-if latitude != 0.0 and longitude != 0.0:
-    st.subheader("Image Location on Map")
 
-    # Create map centered around the given coordinates
-    map_center = [latitude, longitude]
-    m = folium.Map(location=map_center, zoom_start=4)
 
-    # Add a marker for the coordinates
-    folium.Marker([latitude, longitude], popup=f"Location: {latitude}, {longitude}").add_to(m)
+        # Send the GET request to FastAPI
+        response = requests.get(api_url, params={"lat": latitude, "lon": longitude})
+        st.write(response.status_code)
 
-    # Display the map in Streamlit
-    folium_static(m)
+        # Handle the API response
+        if response.status_code == 200:
+            # Parse the API response data
+            data = response.json()
+            deforestation_percentage = data ["deforestation_percentage"]
 
-# Information note at the bottom
-st.info("This is a placeholder. The actual deforestation analysis will be powered by your ML model.")
+            # Display the deforestation percentage
+            st.success(f"In this area, there was a {deforestation_percentage}% increase in deforestation.")
+        else:
+            st.error("Failed to retrieve analysis data from the API.")
+    except Exception as e:
+        st.error(f"Error communicating with the API: {e}")
+else:
+    st.write("Click on the map to select a location.")
