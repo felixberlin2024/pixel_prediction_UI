@@ -11,10 +11,10 @@ google-auth==2.13.0
 google-auth-oauthlib==0.4.6
 
 # Ensure numpy compatibility
-numpy==1.23.5
+numpy>=1.24.0
 
 # Add setuptools to handle builds
-setuptools==65.5.1
+setuptools>=65.5.1
 
 # Additional dependencies
 pandas==1.4.4
