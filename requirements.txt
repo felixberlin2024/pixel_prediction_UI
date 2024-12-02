@@ -1,21 +1,19 @@
-# Core dependencies for the Streamlit app
+# Streamlit dependencies
 streamlit==1.40.2
 streamlit_folium==0.23.2
 folium==0.18.0
 requests==2.28.1
 
-# Address protobuf version conflict
+# Address protobuf and google-api-core compatibility
 protobuf<5.0.0
-
-# Remove conflicting or unnecessary packages for this app
 google-api-core==2.10.2
 google-auth==2.13.0
 google-auth-oauthlib==0.4.6
 
-# Remove unsupported PyTorch wheel; add a simpler compatible version if needed
-# torch==2.0.0  # Uncomment if PyTorch is necessary for this app
-
-# Other essential packages (if explicitly required)
+# Core dependencies for data processing
 pandas==1.4.4
 numpy==1.23.4
 matplotlib==3.5.3
+
+# Optional: Remove unnecessary dependencies
+# Add only what your app truly needs.
