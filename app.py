@@ -4,69 +4,115 @@ from streamlit_folium import st_folium
 import requests
 
 # Set page configuration
-st.set_page_config(layout="wide", page_title="Deforestation Analysis")
+st.set_page_config(page_title="Deforestation Analysis Tool", page_icon="🌳", layout="wide")
+
+# Define API endpoint
+API_URL = "http://127.0.0.1:8000/deforestation/"
 
 # Header
-st.title("Deforestation Analysis Tool")
+st.title("🌳 Deforestation Analysis Tool")
+st.markdown("Analyze deforestation trends in the Amazon region by selecting coordinates within the defined area of interest.")
 
-# Sidebar for displaying clicked coordinates
-st.sidebar.title("Selected Coordinates")
-st.sidebar.info("Click on the map to select a location. The coordinates will be used to analyze deforestation trends.")
+# **Placeholder Section: About the Tool**
+st.subheader("🌱 About This Tool")
+st.markdown(
+    """
+    This tool allows you to analyze deforestation trends in the Amazon region. By selecting coordinates within a defined area of interest,
+    you can access data on the percentage increase in deforestation in specific locations. The Amazon rainforest plays a critical role
+    in regulating the Earth's climate, preserving biodiversity, and supporting indigenous communities. Understanding deforestation patterns
+    is crucial for developing effective conservation strategies and mitigating the impacts of climate change.
+    """
+)
 
-# Initialize state for clicked coordinates
-if "clicked_coords" not in st.session_state:
-    st.session_state["clicked_coords"] = {"latitude": None, "longitude": None}
+# Sidebar for input
+st.sidebar.title("📍 Location Selection")
+st.sidebar.info("Use the sliders to select a location within the defined area of interest.")
 
-# Main content area
-st.subheader("Select a Location on the Map")
+# Define allowed ranges
+LATITUDE_RANGE = (-4.39, -3.33)
+LONGITUDE_RANGE = (-55.2, -54.48)  # Corrected longitude range
 
-# Create a Folium map centered at a default location
-default_center = [-3.4653, -62.2159]  # Default coordinates
-m = folium.Map(location=default_center, zoom_start=4)
+# Initialize session state
+if "latitude" not in st.session_state:
+    st.session_state["latitude"] = -3.85
+if "longitude" not in st.session_state:
+    st.session_state["longitude"] = -54.84
 
-# Add an event listener for clicks
-map_data = st_folium(m, height=500, returned_objects=["last_clicked"])
+# Sliders
+latitude = st.sidebar.slider(
+    "Latitude",
+    LATITUDE_RANGE[0],
+    LATITUDE_RANGE[1],
+    value=st.session_state["latitude"],
+    step=0.01,
+    key="latitude_slider"
+)
+longitude = st.sidebar.slider(
+    "Longitude",
+    LONGITUDE_RANGE[0],
+    LONGITUDE_RANGE[1],
+    value=st.session_state["longitude"],
+    step=0.01,
+    key="longitude_slider"
+)
 
-# Update session state with the clicked coordinates
-if map_data and map_data.get("last_clicked"):
-    st.session_state["clicked_coords"] = {
-        "latitude": map_data["last_clicked"]["lat"],
-        "longitude": map_data["last_clicked"]["lng"]
-    }
+# Update session state
+st.session_state["latitude"] = latitude
+st.session_state["longitude"] = longitude
 
-# Display the selected coordinates and fetch deforestation data
-latitude = st.session_state["clicked_coords"]["latitude"]
-longitude = st.session_state["clicked_coords"]["longitude"]
+# Layout: Map and Analysis side-by-side
+col1, col2 = st.columns([2, 1])  # Adjust column width ratios as needed
 
-if latitude is not None and longitude is not None:
-    # Display rounded coordinates
-    st.write(f"**Latitude:** {round(latitude, 2)}")
-    st.write(f"**Longitude:** {round(longitude, 2)}")
+# Map in the first column
+with col1:
+    # Initial map setup
+    initial_center = [(-4.39 + -3.33) / 2, (-55.2 + -54.48) / 2]
+    initial_zoom = 9
 
-    # Call the FastAPI service with the full-precision coordinates
-    st.write("Analyzing deforestation trends in this area...")
+    m = folium.Map(location=initial_center, zoom_start=initial_zoom)
+
+    # Draw area of interest
+    folium.Rectangle(
+        bounds=[[-4.39, -55.2], [-3.33, -54.48]],
+        color="blue",
+        fill=True,
+        fill_opacity=0.1,
+        tooltip="Area of Interest"
+    ).add_to(m)
+
+    # Marker for selected location
+    folium.Marker(
+        [st.session_state["latitude"], st.session_state["longitude"]],
+        tooltip=f"Latitude: {st.session_state['latitude']}, Longitude: {st.session_state['longitude']}"
+    ).add_to(m)
+
+    # Display map
+    st_folium(m, height=500, width=700)
+
+# Analysis in the second column
+with col2:
+    st.subheader("📊 Deforestation Analysis")
+    st.markdown(
+        f"""
+        **Selected Coordinates**:
+        - **Latitude**: `{st.session_state['latitude']}`
+        - **Longitude**: `{st.session_state['longitude']}`
+        """
+    )
+
     try:
-        # Define the API endpoint
-        api_url = "http://127.0.0.1:8000/deforestation/" #http://host.docker.internal:8000/predict"
+        with st.spinner("Analyzing deforestation trends in this area..."):
+            # Call API
+            response = requests.get(API_URL, params={
+                "lat": st.session_state["latitude"],
+                "lon": st.session_state["longitude"]
+            })
 
-
-
-
-        # Send the GET request to FastAPI
-        response = requests.get(api_url, params={"lat": latitude, "lon": longitude})
-        st.write(response.status_code)
-
-        # Handle the API response
-        if response.status_code == 200:
-            # Parse the API response data
-            data = response.json()
-            deforestation_percentage = data ["deforestation_percentage"]
-
-            # Display the deforestation percentage
-            st.success(f"In this area, there was a {deforestation_percentage}% increase in deforestation.")
-        else:
-            st.error("Failed to retrieve analysis data from the API.")
+            if response.status_code == 200:
+                data = response.json()
+                deforestation_percentage = data.get("deforestation_percentage", "Unknown")
+                st.success(f"🌍 In this area, there was a **{deforestation_percentage}%** increase in deforestation.")
+            else:
+                st.error(f"Failed to retrieve analysis data. Status code: {response.status_code}")
     except Exception as e:
         st.error(f"Error communicating with the API: {e}")
-else:
-    st.write("Click on the map to select a location.")
