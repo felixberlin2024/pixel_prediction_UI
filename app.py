@@ -1,13 +1,13 @@
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
-import requests
+import random  # For generating dummy data
 
 # Set page configuration
 st.set_page_config(page_title="Deforestation Analysis Tool", page_icon="🌳", layout="wide")
 
-# Define API endpoint
-API_URL = "http://127.0.0.1:8000/deforestation/"
+# Placeholder API endpoint (for later use)
+# API_URL = "https://your-real-api-url.com/deforestation/"  # Uncomment and replace with real API URL when ready
 
 # Header
 st.title("🌳 Deforestation Analysis Tool")
@@ -100,9 +100,17 @@ with col2:
         """
     )
 
-    try:
-        with st.spinner("Analyzing deforestation trends in this area..."):
-            # Call API
+    # Placeholder simulation for deforestation percentage
+    with st.spinner("Analyzing deforestation trends in this area..."):
+        # Simulated result for testing
+        dummy_deforestation_percentage = round(random.uniform(10.0, 30.0), 2)
+        st.success(f"🌍 In this area, there was a **{dummy_deforestation_percentage}%** increase in deforestation.")
+
+        # Real API code (currently deactivated for testing)
+        # Uncomment and replace the simulated code above with this when the real API is available:
+        """
+        try:
+            # Call the real API
             response = requests.get(API_URL, params={
                 "lat": st.session_state["latitude"],
                 "lon": st.session_state["longitude"]
@@ -114,5 +122,6 @@ with col2:
                 st.success(f"🌍 In this area, there was a **{deforestation_percentage}%** increase in deforestation.")
             else:
                 st.error(f"Failed to retrieve analysis data. Status code: {response.status_code}")
-    except Exception as e:
-        st.error(f"Error communicating with the API: {e}")
+        except Exception as e:
+            st.error(f"Error communicating with the API: {e}")
+        """
