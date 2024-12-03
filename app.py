@@ -113,7 +113,7 @@ with col2:
 
         try:
             # Call the real API
-            response = requests.get(API_URL, params={
+            response = requests.post(API_URL, params={
                 "lat": st.session_state["latitude"],
                 "lon": st.session_state["longitude"]
             })
