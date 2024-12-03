@@ -1,7 +1,9 @@
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
-import random  # For generating dummy data
+import random
+import requests
+# For generating dummy data
 
 # Set page configuration
 st.set_page_config(page_title="Deforestation Analysis Tool", page_icon="🌳", layout="wide")
