@@ -7,7 +7,7 @@ import random  # For generating dummy data
 st.set_page_config(page_title="Deforestation Analysis Tool", page_icon="🌳", layout="wide")
 
 # Placeholder API endpoint (for later use)
-# API_URL = "https://your-real-api-url.com/deforestation/"  # Uncomment and replace with real API URL when ready
+API_URL = "https://pixel-prediction-1000116839323.europe-west1.run.app/deforestation"  # Uncomment and replace with real API URL when ready
 
 # Header
 st.title("🌳 Deforestation Analysis Tool")
@@ -108,7 +108,7 @@ with col2:
 
         # Real API code (currently deactivated for testing)
         # Uncomment and replace the simulated code above with this when the real API is available:
-        """
+
         try:
             # Call the real API
             response = requests.get(API_URL, params={
@@ -124,4 +124,3 @@ with col2:
                 st.error(f"Failed to retrieve analysis data. Status code: {response.status_code}")
         except Exception as e:
             st.error(f"Error communicating with the API: {e}")
-        """
