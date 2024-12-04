@@ -8,7 +8,7 @@ import random
 st.set_page_config(page_title="Deforestation Analysis Tool", page_icon="🌳", layout="wide")
 
 # API URL
-API_URL = "https://pixel-prediction-1000116839323.europe-west1.run.app/deforestation"
+API_URL = "https://pixelprediction-1000116839323.europe-west1.run.app/deforestation"
 
 # Header
 st.title("🌳 Deforestation Analysis Tool")
