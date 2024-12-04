@@ -101,10 +101,11 @@ col1, col2 = st.columns([2, 1])
 
 # Map in the first column
 with col1:
-    # Map setup
+    # Map setup with static center
+    map_center = [(-4.39 + -3.33) / 2, (-55.2 + -54.48) / 2]  # Static center point
     m = folium.Map(
-        location=[st.session_state["latitude"], st.session_state["longitude"]],
-        zoom_start=9,  # Corrected zoom level
+        location=map_center,  # Keep map center static
+        zoom_start=9,  # Correct zoom level
     )
 
     # Draw area of interest
