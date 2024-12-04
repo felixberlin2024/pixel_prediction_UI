@@ -104,7 +104,7 @@ with col1:
     # Map setup
     m = folium.Map(
         location=[st.session_state["latitude"], st.session_state["longitude"]],
-        zoom_start=10,
+        zoom_start=9,  # Corrected zoom level
     )
 
     # Draw area of interest
