@@ -1,28 +1,25 @@
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
-import random
 import requests
-# For generating dummy data
 
 # Set page configuration
 st.set_page_config(page_title="Deforestation Analysis Tool", page_icon="🌳", layout="wide")
 
-# Placeholder API endpoint (for later use)
-API_URL = "https://pixel-prediction-1000116839323.europe-west1.run.app/deforestation"  # Uncomment and replace with real API URL when ready
+# API URL
+API_URL = "https://pixel-prediction-1000116839323.europe-west1.run.app/deforestation"
 
 # Header
 st.title("🌳 Deforestation Analysis Tool")
 st.markdown("Analyze deforestation trends in the Amazon region by selecting coordinates within the defined area of interest.")
 
-# **Placeholder Section: About the Tool**
+# About Section
 st.subheader("🌱 About This Tool")
 st.markdown(
     """
-    This tool allows you to analyze deforestation trends in the Amazon region. By selecting coordinates within a defined area of interest,
-    you can access data on the percentage increase in deforestation in specific locations. The Amazon rainforest plays a critical role
-    in regulating the Earth's climate, preserving biodiversity, and supporting indigenous communities. Understanding deforestation patterns
-    is crucial for developing effective conservation strategies and mitigating the impacts of climate change.
+    This tool provides insights into deforestation trends in the Amazon rainforest, a critical ecosystem for global climate regulation, biodiversity,
+    and the livelihoods of indigenous communities. By selecting coordinates within a defined area of interest, you can access data on deforestation
+    percentage changes over time. Understanding these patterns is essential for driving effective conservation strategies and mitigating climate change impacts.
     """
 )
 
@@ -32,7 +29,7 @@ st.sidebar.info("Use the sliders to select a location within the defined area of
 
 # Define allowed ranges
 LATITUDE_RANGE = (-4.39, -3.33)
-LONGITUDE_RANGE = (-55.2, -54.48)  # Corrected longitude range
+LONGITUDE_RANGE = (-55.2, -54.48)
 
 # Initialize session state
 if "latitude" not in st.session_state:
@@ -40,7 +37,7 @@ if "latitude" not in st.session_state:
 if "longitude" not in st.session_state:
     st.session_state["longitude"] = -54.84
 
-# Sliders
+# Sliders for latitude and longitude
 latitude = st.sidebar.slider(
     "Latitude",
     LATITUDE_RANGE[0],
@@ -58,16 +55,16 @@ longitude = st.sidebar.slider(
     key="longitude_slider"
 )
 
-# Update session state
+# Update session state with slider values
 st.session_state["latitude"] = latitude
 st.session_state["longitude"] = longitude
 
 # Layout: Map and Analysis side-by-side
-col1, col2 = st.columns([2, 1])  # Adjust column width ratios as needed
+col1, col2 = st.columns([2, 1])
 
 # Map in the first column
 with col1:
-    # Initial map setup
+    # Map setup
     initial_center = [(-4.39 + -3.33) / 2, (-55.2 + -54.48) / 2]
     initial_zoom = 9
 
@@ -82,13 +79,13 @@ with col1:
         tooltip="Area of Interest"
     ).add_to(m)
 
-    # Marker for selected location
+    # Marker for the selected location
     folium.Marker(
         [st.session_state["latitude"], st.session_state["longitude"]],
         tooltip=f"Latitude: {st.session_state['latitude']}, Longitude: {st.session_state['longitude']}"
     ).add_to(m)
 
-    # Display map
+    # Display the map
     st_folium(m, height=500, width=700)
 
 # Analysis in the second column
@@ -102,27 +99,34 @@ with col2:
         """
     )
 
-    # Placeholder simulation for deforestation percentage
-    with st.spinner("Analyzing deforestation trends in this area..."):
-        # Simulated result for testing
-        dummy_deforestation_percentage = round(random.uniform(10.0, 30.0), 2)
-        st.success(f"🌍 In this area, there was a **{dummy_deforestation_percentage}%** increase in deforestation.")
+    # Analyze button
+    if st.button("Analyze Deforestation"):
+        with st.spinner("Analyzing deforestation trends..."):
+            try:
+                # Make API request
+                payload = {
+                    "latitude": st.session_state["latitude"],
+                    "longitude": st.session_state["longitude"]
+                }
+                response = requests.post(API_URL, json=payload, timeout=30)
 
-        # Real API code (currently deactivated for testing)
-        # Uncomment and replace the simulated code above with this when the real API is available:
+                # Handle responses
+                if response.status_code == 200:
+                    data = response.json()
+                    deforestation_percentage = data.get("deforestation_percentage", {}).get("deforestation_percentage", "Unknown")
 
-        try:
-            # Call the real API
-            response = requests.post(API_URL, params={
-                "lat": st.session_state["latitude"],
-                "lon": st.session_state["longitude"]
-            })
+                    if deforestation_percentage == "Unknown":
+                        st.warning("Unexpected API response structure.")
+                    elif isinstance(deforestation_percentage, (int, float)):
+                        st.success(f"🌍 In this area, there was a **{deforestation_percentage:.2f}%** increase in deforestation.")
+                    else:
+                        st.warning(f"Deforestation data unavailable: {data.get('message', 'Unknown error')}")
 
-            if response.status_code == 200:
-                data = response.json()
-                deforestation_percentage = data.get("deforestation_percentage", "Unknown")
-                st.success(f"🌍 In this area, there was a **{deforestation_percentage}%** increase in deforestation.")
-            else:
-                st.error(f"Failed to retrieve analysis data. Status code: {response.status_code}")
-        except Exception as e:
-            st.error(f"Error communicating with the API: {e}")
+                elif response.status_code == 404:
+                    st.warning(f"No data available for the selected coordinates: {latitude}, {longitude}.")
+
+                else:
+                    st.error(f"API Error: {response.status_code} - {response.json().get('detail', 'Unknown error')}")
+
+            except requests.exceptions.RequestException as e:
+                st.error(f"Error communicating with the API: {e}")
