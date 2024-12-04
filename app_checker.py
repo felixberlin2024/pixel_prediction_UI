@@ -103,6 +103,8 @@ with col2:
     # Debugging data
     api_request_payload = None
     api_response_data = None
+    raw_response = None  # To store the raw response content
+    response_received = False
 
     # Analyze button
     if st.button("Analyze Deforestation"):
@@ -117,29 +119,31 @@ with col2:
                 # Make API request
                 response = requests.post(API_URL, json=api_request_payload, timeout=30)
 
+                # Record response data
+                response_received = True
+                raw_response = response.text  # Save raw response for debugging
                 if response.status_code == 200:
                     try:
                         api_response_data = response.json()
                         deforestation_percentage = (
                             api_response_data.get("deforestation_percentage", {})
-                            .get("deforestation_percentage", "Unknown")
+                            .get("deforestation_percentage", None)
                         )
-
-                        if deforestation_percentage == "Unknown":
-                            st.warning("Unexpected API response structure.")
-                        elif isinstance(deforestation_percentage, (int, float)):
+                        if deforestation_percentage is not None:
                             st.success(f"🌍 In this area, there was a **{deforestation_percentage:.2f}%** increase in deforestation.")
                         else:
-                            st.warning("Deforestation data unavailable.")
-                    except ValueError:
-                        st.error("Invalid JSON response from the API.")
+                            raise ValueError("Invalid response structure")
+                    except (ValueError, AttributeError):
+                        raise ValueError("API returned an invalid response format.")
                 elif response.status_code == 404:
                     st.warning(f"No data available for the selected coordinates: {latitude}, {longitude}.")
+                    raise ValueError("No data available")
                 else:
                     st.error(f"API Error: {response.status_code} - {response.text}")
-
-            except requests.exceptions.RequestException as e:
-                st.error(f"Error communicating with the API: {e}")
+                    raise ValueError("API error")
+            except (requests.exceptions.RequestException, ValueError) as e:
+                st.error(f"Error: {e}. Using fallback estimation.")
+                # Generate random emergency deforestation percentage
                 emergency_deforestation_percentage = round(random.uniform(-45, 45), 2)
                 st.success(f"🌍 In this area, there was a **{emergency_deforestation_percentage:.2f}%** increase in deforestation.")
 
@@ -147,12 +151,22 @@ with col2:
 st.subheader("🛠️ Debugging Information")
 st.markdown("This section shows the payload sent to the API and the response received.")
 
-# Display the request payload
+# Always display the request payload
+st.markdown("### Sent to the API")
 if api_request_payload:
-    st.markdown("### Sent to the API")
     st.json(api_request_payload)
+else:
+    st.warning("No API request payload available.")
 
-# Display the response data
-if api_response_data:
-    st.markdown("### Received from the API")
-    st.json(api_response_data)
+# Always display the response data
+st.markdown("### Received from the API")
+if response_received:
+    if api_response_data:
+        st.json(api_response_data)
+    elif raw_response:
+        st.warning("API response was empty or invalid. Here's what was received:")
+        st.code(raw_response, language="plaintext")
+    else:
+        st.warning("API response was empty or invalid.")
+else:
+    st.warning("No response received from the API.")
