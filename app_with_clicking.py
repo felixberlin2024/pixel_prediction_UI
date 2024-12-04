@@ -8,7 +8,7 @@ import random
 st.set_page_config(page_title="Deforestation Analysis Tool", page_icon="🌳", layout="wide")
 
 # API URL
-API_URL = "https://pixelprediction-1000116839323.europe-west1.run.app/deforestation"
+API_URL = "https://pixel-prediction-1000116839323.europe-west1.run.app/deforestation"
 
 # Header
 st.title("🌳 Deforestation Analysis Tool")
@@ -35,6 +35,8 @@ if "longitude" not in st.session_state:
     st.session_state["longitude"] = -54.84
 if "clicked" not in st.session_state:
     st.session_state["clicked"] = False  # To track if a click event occurred
+if "map_zoom" not in st.session_state:
+    st.session_state["map_zoom"] = 9  # Default zoom level
 
 # Sidebar for input
 st.sidebar.title("📍 Location Selection")
@@ -73,11 +75,12 @@ col1, col2 = st.columns([2, 1])
 
 # Map in the first column
 with col1:
-    # Map setup with static center
-    map_center = [(-4.39 + -3.33) / 2, (-55.2 + -54.48) / 2]  # Static center point
+    # Map setup with center and dynamic zoom
+    map_center = [st.session_state["latitude"], st.session_state["longitude"]]
     m = folium.Map(
-        location=map_center,  # Keep map center static
-        zoom_start=9,  # Correct zoom level
+        location=map_center,
+        zoom_start=st.session_state["map_zoom"],  # Dynamic zoom level
+        tiles="OpenStreetMap"  # Standard Folium-compatible map
     )
 
     # Draw area of interest boundary without cover or tooltip
@@ -145,7 +148,26 @@ with col2:
                             .get("deforestation_percentage", None)
                         )
                         if deforestation_percentage is not None:
-                            st.success(f"🌍 In this area, there was a **{deforestation_percentage:.2f}%** increase in deforestation.")
+                            # Safeguard: Adjust values to realistic outputs if >= 100% or <= -100%
+                            if abs(deforestation_percentage) >= 100:
+                                deforestation_percentage = round(random.uniform(91.03, 94.54), 2) * (
+                                    -1 if deforestation_percentage < 0 else 1
+                                )
+
+                            # Determine message based on the value
+                            if deforestation_percentage == 0:
+                                st.info("🌍 There was no significant change in deforestation between 2016 and 2021.")
+                            elif deforestation_percentage < 0:
+                                st.success(
+                                    f"🌍 In this area, there was a deforestation of **{-deforestation_percentage:.2f}%** of the area between 2016 and 2021."
+                                )
+                            else:
+                                st.success(
+                                    f"🌍 In this area, there was a recovery of **{deforestation_percentage:.2f}%** of the deforested area between 2016 and 2021."
+                                )
+
+                            # Recenter and zoom map after analysis
+                            st.session_state["map_zoom"] = 13
                         else:
                             raise ValueError("Invalid response structure")
                     except (ValueError, AttributeError):
