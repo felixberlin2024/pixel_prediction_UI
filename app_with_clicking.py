@@ -34,11 +34,11 @@ if "latitude" not in st.session_state:
 if "longitude" not in st.session_state:
     st.session_state["longitude"] = -54.84
 if "update_source" not in st.session_state:
-    st.session_state["update_source"] = "sliders"  # To track the input source (sliders, input box, map)
+    st.session_state["update_source"] = "input_boxes"  # To track the input source (input box or map)
 
 # Sidebar for input
 st.sidebar.title("📍 Location Selection")
-st.sidebar.info("Use the map, sliders, or input boxes to select coordinates within the defined area of interest.")
+st.sidebar.info("Use the map or input boxes to select coordinates within the defined area of interest.")
 
 # Input boxes
 col_input1, col_input2 = st.sidebar.columns(2)
@@ -63,29 +63,8 @@ with col_input2:
         key="lon_input_box"
     )
 
-# Sliders
-latitude = st.sidebar.slider(
-    "Latitude",
-    LATITUDE_RANGE[0],
-    LATITUDE_RANGE[1],
-    value=st.session_state["latitude"],
-    step=0.01,
-    key="latitude_slider"
-)
-longitude = st.sidebar.slider(
-    "Longitude",
-    LONGITUDE_RANGE[0],
-    LONGITUDE_RANGE[1],
-    value=st.session_state["longitude"],
-    step=0.01,
-    key="longitude_slider"
-)
-
 # Synchronize inputs
-if st.session_state["update_source"] == "sliders":
-    st.session_state["latitude"] = latitude
-    st.session_state["longitude"] = longitude
-elif st.session_state["update_source"] == "input_boxes":
+if st.session_state["update_source"] == "input_boxes":
     st.session_state["latitude"] = lat_input
     st.session_state["longitude"] = lon_input
 
@@ -108,13 +87,12 @@ with col1:
         zoom_start=9,  # Correct zoom level
     )
 
-    # Draw area of interest
+    # Draw area of interest boundary without cover or tooltip
     folium.Rectangle(
         bounds=[[LATITUDE_RANGE[0], LONGITUDE_RANGE[0]], [LATITUDE_RANGE[1], LONGITUDE_RANGE[1]]],
         color="blue",
-        fill=True,
-        fill_opacity=0.1,
-        tooltip="Area of Interest",
+        weight=2,  # Line thickness
+        fill=False,  # No filled area
     ).add_to(m)
 
     # Marker for the selected location
@@ -134,7 +112,6 @@ with col1:
 if st.session_state["update_source"] != "map":
     st.session_state["latitude"] = st.session_state["latitude"]
     st.session_state["longitude"] = st.session_state["longitude"]
-st.session_state["update_source"] = "sliders" if latitude != st.session_state["latitude"] else "input_boxes"
 
 # Analysis in the second column
 with col2:
