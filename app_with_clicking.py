@@ -33,8 +33,8 @@ if "latitude" not in st.session_state:
     st.session_state["latitude"] = -3.85
 if "longitude" not in st.session_state:
     st.session_state["longitude"] = -54.84
-if "update_source" not in st.session_state:
-    st.session_state["update_source"] = "input_boxes"  # To track the input source (input box or map)
+if "clicked" not in st.session_state:
+    st.session_state["clicked"] = False  # To track if a click event occurred
 
 # Sidebar for input
 st.sidebar.title("📍 Location Selection")
@@ -64,17 +64,9 @@ with col_input2:
     )
 
 # Synchronize inputs
-if st.session_state["update_source"] == "input_boxes":
+if not st.session_state["clicked"]:  # Only update from input boxes if no map click
     st.session_state["latitude"] = lat_input
     st.session_state["longitude"] = lon_input
-
-# Map click updates
-def map_click(lat, lon):
-    """Updates session state with clicked map coordinates."""
-    if LATITUDE_RANGE[0] <= lat <= LATITUDE_RANGE[1] and LONGITUDE_RANGE[0] <= lon <= LONGITUDE_RANGE[1]:
-        st.session_state["latitude"] = round(lat, 2)
-        st.session_state["longitude"] = round(lon, 2)
-        st.session_state["update_source"] = "map"
 
 # Layout: Map and Analysis side-by-side
 col1, col2 = st.columns([2, 1])
@@ -109,16 +101,18 @@ with col1:
     if map_data and map_data.get("last_clicked"):
         clicked_lat = map_data["last_clicked"]["lat"]
         clicked_lon = map_data["last_clicked"]["lng"]
-        if (
-            clicked_lat != st.session_state["latitude"]
-            or clicked_lon != st.session_state["longitude"]
-        ):  # Update only if coordinates differ
-            map_click(clicked_lat, clicked_lon)
 
-# Update source tracking
-if st.session_state["update_source"] != "map":
-    st.session_state["latitude"] = st.session_state["latitude"]
-    st.session_state["longitude"] = st.session_state["longitude"]
+        # Update session state and mark the click as processed
+        if (
+            LATITUDE_RANGE[0] <= clicked_lat <= LATITUDE_RANGE[1]
+            and LONGITUDE_RANGE[0] <= clicked_lon <= LONGITUDE_RANGE[1]
+        ):
+            st.session_state["latitude"] = round(clicked_lat, 2)
+            st.session_state["longitude"] = round(clicked_lon, 2)
+            st.session_state["clicked"] = True  # Avoid input box overwriting
+
+# Reset the click state for future updates
+st.session_state["clicked"] = False
 
 # Analysis in the second column
 with col2:
@@ -157,7 +151,7 @@ with col2:
                     except (ValueError, AttributeError):
                         raise ValueError("API returned an invalid response format.")
                 elif response.status_code == 404:
-                    st.warning(f"No data available for the selected coordinates: {latitude}, {longitude}.")
+                    st.warning(f"No data available for the selected coordinates: {st.session_state['latitude']}, {st.session_state['longitude']}.")
                     raise ValueError("No data available")
                 else:
                     st.error(f"API Error: {response.status_code} - {response.text}")
