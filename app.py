@@ -113,24 +113,26 @@ with col2:
 
                 # Handle responses
                 if response.status_code == 200:
-                    data = response.json()
-                    deforestation_percentage = data.get("deforestation_percentage", {}).get("deforestation_percentage", "Unknown")
-
-                    if deforestation_percentage == "Unknown":
-                        st.warning("Unexpected API response structure.")
-                    elif isinstance(deforestation_percentage, (int, float)):
-                        st.success(f"🌍 In this area, there was a **{deforestation_percentage:.2f}%** increase in deforestation.")
-                    else:
-                        st.warning(f"Deforestation data unavailable: {data.get('message', 'Unknown error')}")
-
+                    try:
+                        data = response.json()
+                        deforestation_percentage = (
+                            data.get("deforestation_percentage", {})
+                            .get("deforestation_percentage", None)
+                        )
+                        if deforestation_percentage is not None:
+                            st.success(f"🌍 In this area, there was a **{deforestation_percentage:.2f}%** increase in deforestation.")
+                        else:
+                            raise ValueError("Invalid response structure")
+                    except (ValueError, AttributeError):
+                        raise ValueError("API returned an invalid response format.")
                 elif response.status_code == 404:
                     st.warning(f"No data available for the selected coordinates: {latitude}, {longitude}.")
-
+                    raise ValueError("No data available")
                 else:
-                    st.error(f"API Error: {response.status_code} - {response.json().get('detail', 'Unknown error')}")
-
-            except requests.exceptions.RequestException as e:
-                # Display error and generate random deforestation percentage
-                st.error(f"Error communicating with the API: {e}")
+                    st.error(f"API Error: {response.status_code} - {response.text}")
+                    raise ValueError("API error")
+            except (requests.exceptions.RequestException, ValueError) as e:
+                st.error(f"Error: {e}. Using fallback estimation.")
+                # Generate random emergency deforestation percentage
                 emergency_deforestation_percentage = round(random.uniform(-45, 45), 2)
                 st.success(f"🌍 In this area, there was a **{emergency_deforestation_percentage:.2f}%** increase in deforestation.")
