@@ -70,6 +70,7 @@ if st.session_state["update_source"] == "input_boxes":
 
 # Map click updates
 def map_click(lat, lon):
+    """Updates session state with clicked map coordinates."""
     if LATITUDE_RANGE[0] <= lat <= LATITUDE_RANGE[1] and LONGITUDE_RANGE[0] <= lon <= LONGITUDE_RANGE[1]:
         st.session_state["latitude"] = round(lat, 2)
         st.session_state["longitude"] = round(lon, 2)
@@ -103,10 +104,16 @@ with col1:
 
     # Add click functionality
     map_data = st_folium(m, height=500, width=700, returned_objects=["last_clicked"])
-    if map_data["last_clicked"]:
+
+    # Immediate synchronization of map clicks
+    if map_data and map_data.get("last_clicked"):
         clicked_lat = map_data["last_clicked"]["lat"]
         clicked_lon = map_data["last_clicked"]["lng"]
-        map_click(clicked_lat, clicked_lon)
+        if (
+            clicked_lat != st.session_state["latitude"]
+            or clicked_lon != st.session_state["longitude"]
+        ):  # Update only if coordinates differ
+            map_click(clicked_lat, clicked_lon)
 
 # Update source tracking
 if st.session_state["update_source"] != "map":
