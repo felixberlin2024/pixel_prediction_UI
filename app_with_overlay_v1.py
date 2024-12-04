@@ -31,7 +31,7 @@ if "map_zoom" not in st.session_state:
 if "deforestation_result" not in st.session_state:
     st.session_state["deforestation_result"] = None  # Holds the detailed analysis result
 if "deforestation_percentage" not in st.session_state:
-    st.session_state["deforestation_percentage"] = None  # Holds the percentage for display
+    st.session_state["deforestation_percentage"] = None  # Holds the percentage or emoji display
 if "placeholder_shown" not in st.session_state:
     st.session_state["placeholder_shown"] = False  # Tracks if the placeholder is shown
 
@@ -80,12 +80,16 @@ if st.sidebar.button("Analyze Deforestation"):
                         deforestation_percentage = round(random.uniform(91.03, 94.54), 2) * (-1 if deforestation_percentage < 0 else 1)
 
                     # Update session state
-                    st.session_state["deforestation_percentage"] = f"{deforestation_percentage:.2f}%"
-                    st.session_state["deforestation_result"] = (
-                        f"🌍 In this area, there was a deforestation of **{deforestation_percentage:.2f}%** of the area between 2016 and 2021."
-                        if deforestation_percentage < 0
-                        else f"🌍 In this area, there was a recovery of **{deforestation_percentage:.2f}%** of the deforested area between 2016 and 2021."
-                    )
+                    if deforestation_percentage == 0:
+                        st.session_state["deforestation_percentage"] = "🌳❤️"
+                        st.session_state["deforestation_result"] = "🌍 There was no significant change in deforestation between 2016 and 2021."
+                    else:
+                        st.session_state["deforestation_percentage"] = f"{deforestation_percentage:.2f}%"
+                        st.session_state["deforestation_result"] = (
+                            f"🌍 In this area, there was a deforestation of **{deforestation_percentage:.2f}%** of the area between 2016 and 2021."
+                            if deforestation_percentage < 0
+                            else f"🌍 In this area, there was a recovery of **{deforestation_percentage:.2f}%** of the deforested area between 2016 and 2021."
+                        )
                 else:
                     raise ValueError("Invalid response structure")
             elif response.status_code == 404:
@@ -152,7 +156,7 @@ with col2:
     if st.session_state["deforestation_result"]:
         st.write(st.session_state["deforestation_result"])
 
-    # Large output box for the percentage
+    # Large output box for the percentage or emoji display
     if st.session_state["deforestation_percentage"]:
         st.markdown(
             f"<div style='font-size: 48px; font-weight: bold; text-align: center;'>{st.session_state['deforestation_percentage']}</div>",
