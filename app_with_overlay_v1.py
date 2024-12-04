@@ -144,20 +144,25 @@ with col1:
                 "longitude": round(clicked_lon, 2),
                 "clicked": True,
             })
+            st.info(f"Coordinates updated: {st.session_state['latitude']}, {st.session_state['longitude']}")
 
 # Analysis output in the second column
 with col2:
     # Output box for the detailed analysis result
     if st.session_state["deforestation_result"]:
-        st.markdown("#### Detailed Analysis")
         st.write(st.session_state["deforestation_result"])
 
     # Large output box for the percentage
     if st.session_state["deforestation_percentage"]:
-        st.markdown("### Deforestation Percentage")
-        st.write(f"**{st.session_state['deforestation_percentage']}**")
+        st.markdown(
+            f"<div style='font-size: 48px; font-weight: bold; text-align: center;'>{st.session_state['deforestation_percentage']}</div>",
+            unsafe_allow_html=True,
+        )
 
     # Placeholder box
     if st.session_state["placeholder_shown"]:
-        st.markdown("#### Placeholder")
-        st.info("This is a placeholder for future content.")
+        st.markdown(
+            "<div style='border: 2px dashed #ccc; padding: 20px; height: 300px; text-align: center;'>"
+            "This is a placeholder for future content.</div>",
+            unsafe_allow_html=True,
+        )
