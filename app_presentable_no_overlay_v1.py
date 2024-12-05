@@ -15,8 +15,8 @@ st.sidebar.title("📍 Location Selection")
 st.sidebar.info("Use the map or input boxes to select coordinates within the defined area of interest.")
 
 # Define allowed ranges
-LATITUDE_RANGE = (-4.39, -3.33)
-LONGITUDE_RANGE = (-55.2, -54.48)
+LATITUDE_RANGE = (-4.39, -3.33)  # Min and max latitude of the area
+LONGITUDE_RANGE = (-55.2, -54.48)  # Min and max longitude of the area
 
 # Initialize session state dynamically
 if "latitude" not in st.session_state:
@@ -120,7 +120,8 @@ with col1:
 
     # Draw area of interest boundary
     folium.Rectangle(
-        bounds=[[LATITUDE_RANGE[0], LONGITUDE_RANGE[0]], [LATITUDE_RANGE[1], LATITUDE_RANGE[1]]],
+        bounds=[[LATITUDE_RANGE[0], LONGITUDE_RANGE[0]],  # Bottom-left corner
+                [LATITUDE_RANGE[1], LONGITUDE_RANGE[1]]],  # Top-right corner
         color="blue",
         weight=2,
         fill=False
