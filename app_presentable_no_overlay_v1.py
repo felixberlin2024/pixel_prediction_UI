@@ -153,17 +153,17 @@ with col1:
 
 # Analysis output in the second column
 with col2:
-    # Enlarged output box for the detailed analysis result
+    # Adjusted position for the detailed analysis result
     if st.session_state["deforestation_result"]:
         st.markdown(
-            f"<div style='font-size: 30px; font-weight: bold; text-align: center; margin-top: -50px;'>{st.session_state['deforestation_result']}</div>",
+            f"<div style='font-size: 30px; font-weight: bold; text-align: center; margin-top: 20px;'>{st.session_state['deforestation_result']}</div>",
             unsafe_allow_html=True,
         )
 
-    # Adjusted output box for the percentage or emoji display
+    # Adjusted position for the percentage display
     if st.session_state["deforestation_percentage"]:
         st.markdown(
-            f"<div style='font-size: 60px; font-weight: bold; text-align: center;'>{st.session_state['deforestation_percentage']}</div>",
+            f"<div style='font-size: 60px; font-weight: bold; text-align: center; margin-top: 10px;'>{st.session_state['deforestation_percentage']}</div>",
             unsafe_allow_html=True,
         )
 
