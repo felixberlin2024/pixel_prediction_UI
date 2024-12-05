@@ -107,8 +107,8 @@ col1, col2 = st.columns([2, 1])
 
 # Map in the first column
 with col1:
-    # Title above the map
-    st.markdown("<h1 style='text-align: center;'>🌳 Pixel Prediction 🌳</h1>", unsafe_allow_html=True)
+    # Move the title higher
+    st.markdown("<h1 style='text-align: center; margin-top: -50px;'>🌳 Pixel Prediction 🌳</h1>", unsafe_allow_html=True)
 
     # Map setup with center and dynamic zoom
     map_center = (
@@ -120,7 +120,7 @@ with col1:
 
     # Draw area of interest boundary
     folium.Rectangle(
-        bounds=[[LATITUDE_RANGE[0], LONGITUDE_RANGE[0]], [LATITUDE_RANGE[1], LONGITUDE_RANGE[1]]],
+        bounds=[[LATITUDE_RANGE[0], LONGITUDE_RANGE[0]], [LATITUDE_RANGE[1], LATITUDE_RANGE[1]]],
         color="blue",
         weight=2,
         fill=False
@@ -155,7 +155,7 @@ with col2:
     # Enlarged output box for the detailed analysis result
     if st.session_state["deforestation_result"]:
         st.markdown(
-            f"<div style='font-size: 30px; font-weight: bold; text-align: center; padding: 10px;'>{st.session_state['deforestation_result']}</div>",
+            f"<div style='font-size: 30px; font-weight: bold; text-align: center; margin-top: -50px;'>{st.session_state['deforestation_result']}</div>",
             unsafe_allow_html=True,
         )
 
@@ -167,11 +167,6 @@ with col2:
         )
 
 # Disclaimer box under the "Analyze Deforestation" button
-st.sidebar.markdown(
-    """
-    <div style='border: 2px solid #d1e7dd; background-color: #d1e7dd; color: #0f5132; padding: 10px;'>
-        Disclaimer: Shown percentages are AI predictions, not verified by humans.
-    </div>
-    """,
-    unsafe_allow_html=True
+st.sidebar.info(
+    "Disclaimer: Shown percentages are AI predictions, not verified by humans."
 )
